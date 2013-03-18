@@ -68,7 +68,7 @@ TWEEN.Tween = (object) ->
 		_startTime = if time isnt undefined then time else ( if window.performance isnt undefined and window.performance.now isnt undefined then window.performance.now() else Date.now() )
 		_startTime += _delayTime;
 
-		for(proptery of _valuesEnd)
+		for proptery of _valuesEnd
 			if _valuesEnd[ property ] instanceof Array
 
 				if _valuesEnd[ property ].length is 0 
@@ -120,3 +120,49 @@ TWEEN.Tween = (object) ->
 	this.onComplete = ( callback ) ->
 		_onCompleteCallback = callback
 		return this
+
+	this.update = (time) ->
+		if time < _startTime then return true
+		if _onStartCallbackFired  is false
+			if _onStartCallback isnt null
+				_onStartCallback.call _object 
+			_onStartCallbackFired = true
+
+		elapsed = ( time - _startTime ) / _duration
+		elapsed if elapsed > 1 then 1 else elapsed;
+
+		value = _easingFunction elapsed
+
+		for property of _valuesEnd
+			start= _valuesStart[ property ] || 0
+			end = _valuesEnd[ property ]
+
+			if end instanceof Array
+				_object[ property ] = _interpolationFunction end, value 
+			else
+				if typeof end is "string" then end = start + parseFloat end, 10
+				_object[ property ] = start + ( end - start ) * value
+
+		if _onUpdateCallback isnt null then _onUpdateCallback.call _object, value
+
+		if elapsed is 1
+			if _repeat > 0
+				if isFinite _repeat then _repeat--
+
+				for property of _valuesStartRepeat
+					if typeof _valuesEnd[ property ] is "string"
+						_valuesStartRepeat[ property ] = _valuesStartRepeat[ property ] + parseFloat _valuesEnd[ property ], 10
+					
+					_valuesStart[ property ] = _valuesStartRepeat[ property ]
+
+				_startTime = time + _delayTime
+				return true
+			else
+				if _onCompleteCallback isnt null then _onCompleteCallback.call _object 
+
+				for i in [0.._chainedTweens.length]
+					_chainedTweens[ i ].start time 
+
+				return false
+				
+		return true
