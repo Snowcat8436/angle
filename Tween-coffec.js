@@ -166,3 +166,16 @@ TWEEN.Tween = (object) ->
 				return false
 				
 		return true
+
+TWEEN.Easing =
+	Linear: 
+		None: (k) -> return k
+	Quadratic: 
+		In: (k) -> return k*k
+		Out: (k) -> return k*(2-k)
+		InOut: (k) -> if (k*=2) < 1) then return 0.5 * k * k else - 0.5 * ( --k * ( k - 2 ) - 1 )
+	Cubic:
+		In: (k) -> return k * k * k
+		Out: (k) -> return --k * k * k + 1
+		InOut: (k) -> if (k*=2) < 1) then return 0.5 * k * k * k else return 0.5 * ( ( k -= 2 ) * k * k + 2 )
+
